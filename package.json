@@ -22,7 +22,7 @@
   "dependencies": {
     "cheerio": "^0.22.0",
     "crypto": "0.0.3",
-    "html-entities": "^1.2.0",
+    "html-entities": "^1.2.1",
     "marked": "^0.3.6",
     "node-mkdirs": "0.0.1",
     "q": "^1.4.1"

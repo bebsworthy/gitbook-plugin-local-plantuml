@@ -48,7 +48,6 @@ function processPumlImg(gitbook, page) {
             gitbook.log.debug("i ", i);
             gitbook.log.debug("this ", $(this));
 
-
             var content = fs.readFileSync(resolvedPath, 'utf8');
             var imgSrc = buildImageFromPlantUml(gitbook, content, resolvedPath);
 
@@ -69,14 +68,17 @@ function buildImageFromPlantUml(gitbook, umlText, optionalSourcePath) {
         defaultFormat = '.png';
     }
 
+    
     var imageName = hashedImageName(umlText) + defaultFormat;
-    var tmpdir = process.env.PLANTUML_TEMPDIR || os.tmpdir();
-    gitbook.log.debug("using tempDir ", tmpdir);
+    var tmpdir = process.env.PLANTUML_TEMPDIR || 
+                gitbook.config.get('pluginsConfig.plantuml.tmpdir') ||
+                os.tmpdir();
+    gitbook.log.info("using tempDir ", tmpdir);
     mkdirs(tmpdir);
     var imagePath = path.join(tmpdir, imageName);
 
     if (fs.existsSync(imagePath)) {
-        gitbook.log.info.ln("skipping plantUML image for ", imageName);
+        gitbook.log.info.ln("skipping plantUML image for ", imageName, " because ", imagePath, " already exists");
     }
     else
     {
