@@ -21,11 +21,12 @@ function hashedImageName(content) {
 }
 
 function parseUmlText(sourceText) {
-  var umlText = entities.decode(sourceText).replace(/(^[ \t]*\n)/gm, '');
-  umlText = marked(umlText).replace(/^<p>/, '').replace(/<\/p>\n$/, '');
-  umlText = entities.decode(umlText);
+  //var umlText = entities.decode(sourceText).replace(/(^[ \t]*\n)/gm, '');
+  //umlText = marked(umlText).replace(/^<p>/, '').replace(/<\/p>\n$/, '');
+  //umlText = entities.decode(umlText);
 
-  return umlText;
+  //return umlText;
+  return sourceText
 }
 
 function processPumlImg(gitbook, page) {
@@ -115,11 +116,14 @@ module.exports = {
     blocks: {
         plantuml: {
             process: function (block) {
+                console.log("Block body ", block, block.body);
 
-                var umlText = parseUmlText(block.body);
-                var imgSrc = buildImageFromPlantUml(this, umlText);
+                // What the point???
+                // var umlText = parseUmlText(block.body);
+                
+                var imgSrc = buildImageFromPlantUml(this, block.body);
 
-                return "<img src=\"" + imgSrc + "\"/>";
+                return { body: "<img src=\"" + imgSrc + "\"/>" };
             }
     }
   },
