@@ -69,40 +69,52 @@ function buildImageFromPlantUml(gitbook, umlText, optionalSourcePath) {
         defaultFormat = '.png';
     }
 
-    
     var imageName = hashedImageName(umlText) + defaultFormat;
     var tmpdir = process.env.PLANTUML_TEMPDIR || 
                 gitbook.config.get('pluginsConfig.plantuml.tmpdir') ||
                 os.tmpdir();
     gitbook.log.info("using tempDir ", tmpdir);
     mkdirs(tmpdir);
-    var imagePath = path.join(tmpdir, imageName);
+    var imagePath = path.resolve(path.join(tmpdir, imageName));
 
-    if (fs.existsSync(imagePath)) {
+    if (fs.existsSync(imagePath) && false) {
         gitbook.log.info.ln("skipping plantUML image for ", imageName, " because ", imagePath, " already exists");
     }
     else
     {
-        gitbook.log.info.ln("rendering plantUML image to ", imageName);
-
         var cwd = process.cwd();
         if (optionalSourcePath) {
           cwd = path.dirname(optionalSourcePath);
+        } else {
+            var root = gitbook.config.get('root') || ""
+            // TODO: better API to obtain that path? (ctx.ctx??)
+            cwd = path.dirname(path.resolve(root, gitbook.ctx.ctx.file.path))
         }
 
-        childProcess.spawnSync("java", [
-           //     '-Dplantuml.include.path=' + cwd,
-                '-Djava.awt.headless=true',
-                '-jar', PLANTUML_JAR, outputFormat,
-                '-charset', 'UTF-8',
-                '-pipe'
-            ],
-            {
-                // TODO: Extract stdout to a var and persist with gitbook.output.writeFile
-                stdio: ['pipe', fs.openSync(imagePath, 'w'), 'pipe'],
-                input: umlText,
-                cwd: cwd
-            });
+        gitbook.log.info.ln("rendering plantUML image to ", imagePath);
+        gitbook.log.info.ln("Working directory", cwd);
+       
+        var result = childProcess.spawnSync("java", [
+        //     '-Dplantuml.include.path=' + cwd,
+            '-Djava.awt.headless=true',
+            '-jar', PLANTUML_JAR, outputFormat,
+            '-charset', 'UTF-8',
+            '-pipe'
+        ],
+        {
+            // TODO: Extract stdout to a var and persist with gitbook.output.writeFile
+            stdio: ['pipe', fs.openSync(imagePath, 'w'), 'pipe'],
+            input: umlText,
+            cwd: cwd
+        });
+
+        if (result.status != 0)
+            gitbook.log.error.ln("Rendering failed for some reason, plantUML exit code =", status);
+            
+        // if (result.stdout)
+        //     console.log(result.stdout.toString())
+        // if (result.stderr)
+        //     console.log(result.stderr.toString())
     }
 
     var targetPath = path.join("images/puml/", imageName);
@@ -116,13 +128,7 @@ module.exports = {
     blocks: {
         plantuml: {
             process: function (block) {
-                console.log("Block body ", block, block.body);
-
-                // What the point???
-                // var umlText = parseUmlText(block.body);
-                
                 var imgSrc = buildImageFromPlantUml(this, block.body);
-
                 return { body: "<img src=\"" + imgSrc + "\"/>" };
             }
     }
